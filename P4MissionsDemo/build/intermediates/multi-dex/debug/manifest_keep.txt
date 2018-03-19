@@ -1,0 +1,3 @@
+# Referenced at C:\Users\andre\Documents\Uni\BA-DJI-Projects\ActiveTrack\P4MissionsDemo\build\intermediates\manifests\full\debug\AndroidManifest.xml:56
+-keep class com.dji.P4MissionsDemo.MApplication { <init>(...); }
+
