@@ -24,23 +24,27 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import dji.common.error.DJIError;
 import dji.common.error.DJISDKError;
-import dji.common.useraccount.UserAccountState;
+import dji.common.flightcontroller.FlightControllerState;
 import dji.common.util.CommonCallbacks;
 import dji.log.DJILog;
 import dji.sdk.base.BaseProduct;
+import dji.sdk.flightcontroller.FlightController;
+import dji.sdk.products.Aircraft;
 import dji.sdk.sdkmanager.DJISDKManager;
-import dji.sdk.useraccount.UserAccountManager;
+import dji.thirdparty.rx.Observable;
+import dji.thirdparty.rx.Subscription;
+import dji.thirdparty.rx.functions.Action1;
 
 public class MainActivity extends DemoBaseActivity {
-	
+
     public static final String TAG = MainActivity.class.getName();
-    
+
     public String mString = null;
-    private BaseProduct mProduct;
     private ArrayList<DemoInfo> demos = new ArrayList<DemoInfo>();
     private ListView mListView;
     private DemoListAdapter mDemoListAdapter = new DemoListAdapter();
@@ -72,13 +76,13 @@ public class MainActivity extends DemoBaseActivity {
         checkAndRequestPermissions();
 
         setContentView(R.layout.activity_main);
-        
+
         mConnectStatusTextView = (TextView) findViewById(R.id.ConnectStatusTextView);
-        
-        mListView = (ListView)findViewById(R.id.listView); 
+
+        mListView = (ListView) findViewById(R.id.listView);
         mListView.setAdapter(mDemoListAdapter);
-        
-        mFirmwareVersionView = (TextView)findViewById(R.id.version_tv);
+
+        mFirmwareVersionView = (TextView) findViewById(R.id.version_tv);
 
         loadDemoList();
 
@@ -137,7 +141,7 @@ public class MainActivity extends DemoBaseActivity {
             AsyncTask.execute(new Runnable() {
                 @Override
                 public void run() {
-                    showToast( "registering, pls wait...");
+                    showToast("registering, pls wait...");
                     DJISDKManager.getInstance().registerApp(getApplicationContext(), new DJISDKManager.SDKManagerCallback() {
                         @Override
                         public void onRegister(DJIError djiError) {
@@ -146,7 +150,7 @@ public class MainActivity extends DemoBaseActivity {
                                 DJISDKManager.getInstance().startConnectionToProduct();
                                 showToast("Register Success");
                             } else {
-                                showToast( "Register sdk fails, check network is available");
+                                showToast("Register sdk fails, check network is available");
                             }
                             Log.v(TAG, djiError.getDescription());
                         }
@@ -172,8 +176,8 @@ public class MainActivity extends DemoBaseActivity {
     }
 
     private void loadDemoList() {
-        mListView.setOnItemClickListener(new OnItemClickListener() {  
-            public void onItemClick(AdapterView<?> arg0, View v, int index, long arg3) {  
+        mListView.setOnItemClickListener(new OnItemClickListener() {
+            public void onItemClick(AdapterView<?> arg0, View v, int index, long arg3) {
                 onListItemClick(index);
             }
         });
@@ -181,20 +185,25 @@ public class MainActivity extends DemoBaseActivity {
         demos.add(new DemoInfo(R.string.title_activity_tracking_test, R.string.demo_desc_tracking, TrackingTestActivity.class));
         demos.add(new DemoInfo(R.string.title_activity_pointing_test, R.string.demo_desc_pointing, PointingTestActivity.class));
     }
-    
+
     private void onListItemClick(int index) {
         Intent intent = null;
         intent = new Intent(MainActivity.this, demos.get(index).demoClass);
         this.startActivity(intent);
     }
-    
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
     }
-    
-    public void onReturn(View view){
-        Log.d(TAG ,"onReturn");  
+
+    public void onReturn(View view) {
+        Log.d(TAG, "onReturn");
         this.finish();
     }
 
@@ -207,20 +216,22 @@ public class MainActivity extends DemoBaseActivity {
         @Override
         public View getView(int index, View convertView, ViewGroup parent) {
             convertView = View.inflate(MainActivity.this, R.layout.demo_info_item, null);
-            TextView title = (TextView)convertView.findViewById(R.id.title);
-            TextView desc = (TextView)convertView.findViewById(R.id.desc);
+            TextView title = (TextView) convertView.findViewById(R.id.title);
+            TextView desc = (TextView) convertView.findViewById(R.id.desc);
 
             title.setText(demos.get(index).title);
             desc.setText(demos.get(index).desc);
             return convertView;
         }
+
         @Override
         public int getCount() {
             return demos.size();
         }
+
         @Override
         public Object getItem(int index) {
-            return  demos.get(index);
+            return demos.get(index);
         }
 
         @Override
@@ -228,19 +239,19 @@ public class MainActivity extends DemoBaseActivity {
             return id;
         }
     }
-    
-    private static class DemoInfo{
+
+    private static class DemoInfo {
         private final int title;
         private final int desc;
         private final Class<? extends android.app.Activity> demoClass;
 
-        public DemoInfo(int title , int desc,Class<? extends android.app.Activity> demoClass) {
+        public DemoInfo(int title, int desc, Class<? extends android.app.Activity> demoClass) {
             this.title = title;
-            this.desc  = desc;
+            this.desc = desc;
             this.demoClass = demoClass;
         }
     }
-    
+
     @Override
     protected void onProductChange() {
         super.onProductChange();
@@ -263,11 +274,10 @@ public class MainActivity extends DemoBaseActivity {
     private void updateVersion() {
 
         BaseProduct product = DJISDKManager.getInstance().getProduct();
-        if(product != null) {
+        if (product != null) {
             version = product.getFirmwarePackageVersion();
         }
-        
-        if(version == null) {
+        if (version == null) {
             version = "N/A";
         }
         MainActivity.this.runOnUiThread(new Runnable() {
@@ -276,6 +286,6 @@ public class MainActivity extends DemoBaseActivity {
                 mFirmwareVersionView.setText("Firmware version: " + version);
             }
         });
-        
+
     }
 }

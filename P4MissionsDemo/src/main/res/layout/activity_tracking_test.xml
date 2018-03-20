@@ -21,15 +21,21 @@
             android:onClick="onReturn"
             android:scaleType="centerInside" />
         selector_button
-        <TextView
+        <!--<TextView
             android:id="@+id/ConnectStatusTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
             android:text="@string/title_activity_tracking_test"
             android:textColor="@android:color/white"
-            android:textSize="21sp" />
-
+            android:textSize="21sp" />-->
+        <ToggleButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/circleTarget"
+            android:layout_centerInParent="true"
+            android:textOn="Circle Target On"
+            android:textOff="Circle Target Off"/>
         <ImageButton
             android:id="@+id/tracking_drawer_control_ib"
             android:layout_width="wrap_content"

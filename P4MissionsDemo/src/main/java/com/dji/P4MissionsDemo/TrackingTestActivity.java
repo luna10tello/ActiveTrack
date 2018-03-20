@@ -1,5 +1,6 @@
 package com.dji.P4MissionsDemo;
 
+import dji.common.camera.SettingsDefinitions;
 import dji.common.error.DJIError;
 import dji.common.mission.activetrack.ActiveTrackMission;
 import dji.common.mission.activetrack.ActiveTrackMissionEvent;
@@ -8,13 +9,21 @@ import dji.common.mission.activetrack.ActiveTrackState;
 import dji.common.mission.activetrack.ActiveTrackTargetState;
 import dji.common.mission.activetrack.ActiveTrackTrackingState;
 import dji.common.util.CommonCallbacks;
+import dji.sdk.base.BaseProduct;
+import dji.sdk.camera.Camera;
+import dji.sdk.flightcontroller.FlightController;
 import dji.sdk.mission.activetrack.ActiveTrackMissionOperatorListener;
 import dji.sdk.mission.activetrack.ActiveTrackOperator;
+import dji.sdk.products.Aircraft;
 import dji.sdk.sdkmanager.DJISDKManager;
+import dji.thirdparty.rx.Observable;
+import dji.thirdparty.rx.Subscription;
+import dji.thirdparty.rx.functions.Action1;
 
 import android.graphics.PointF;
 import android.graphics.RectF;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.TextureView.SurfaceTextureListener;
@@ -29,12 +38,24 @@ import android.widget.SlidingDrawer;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
+
+import java.util.concurrent.TimeUnit;
 
 public class TrackingTestActivity extends DemoBaseActivity implements SurfaceTextureListener, OnClickListener, OnTouchListener, ActiveTrackMissionOperatorListener {
 
     private static final String TAG = "TrackingTestActivity";
 
     private ActiveTrackMission mActiveTrackMission;
+    private FlightController mFlightController;
+    private Camera mCamera;
+    private BaseProduct mProduct;
+    private Observable<Long> timer = Observable.interval(100, TimeUnit.MILLISECONDS);
+    private Subscription timerSubscription;
+    private Subscription carHeadingSubscription;
+    private float droneHeading;
+    private float carHeading;
+    private float MAX_SPEED = (float) 1.5;
 
     private ImageButton mPushDrawerIb;
     private SlidingDrawer mPushInfoSd;
@@ -50,8 +71,8 @@ public class TrackingTestActivity extends DemoBaseActivity implements SurfaceTex
     private Button mConfigBtn;
     private Button mConfirmBtn;
     private Button mRejectBtn;
+    private ToggleButton mCircleTargetBtn;
 
-    // flags
     private boolean isDrawingRect = false;
 
     private ActiveTrackOperator getActiveTrackOperator() {
@@ -69,6 +90,23 @@ public class TrackingTestActivity extends DemoBaseActivity implements SurfaceTex
     @Override
     protected void onResume() {
         super.onResume();
+        initFlightController();
+    }
+
+    private void initFlightController() {
+        mProduct = DJIDemoApplication.getProductInstance();
+        if (mProduct != null && mProduct.isConnected()) {
+            if (mProduct instanceof Aircraft) {
+                mFlightController = ((Aircraft) mProduct).getFlightController();
+                mCamera = ((Aircraft) mProduct).getCamera();
+                mCamera.setExposureMode(SettingsDefinitions.ExposureMode.PROGRAM, new CommonCallbacks.CompletionCallback() {
+                    @Override
+                    public void onResult(DJIError djiError) {
+                        Log.i(TAG, "set exposure mode PROGRAM: " + (djiError == null ? "success" : djiError.getDescription()));
+                    }
+                });
+            }
+        }
     }
 
     @Override
@@ -77,8 +115,16 @@ public class TrackingTestActivity extends DemoBaseActivity implements SurfaceTex
         if(mCodecManager != null){
             mCodecManager.destroyCodec();
         }
-
+        cancelSubscription(timerSubscription);
+        cancelSubscription(carHeadingSubscription);
         super.onDestroy();
+    }
+
+    private void cancelSubscription(Subscription subscription) {
+        if (subscription != null && !subscription.isUnsubscribed()) {
+            subscription.unsubscribe();
+            Log.i(TAG, "Unsubscribed Timer: " + subscription.toString());
+        }
     }
 
     public void onReturn(View view){
@@ -121,12 +167,36 @@ public class TrackingTestActivity extends DemoBaseActivity implements SurfaceTex
         mConfigBtn = (Button)findViewById(R.id.recommended_configuration_btn);
         mConfirmBtn = (Button)findViewById(R.id.confirm_btn);
         mRejectBtn = (Button)findViewById(R.id.reject_btn);
+        mCircleTargetBtn = findViewById(R.id.circleTarget);
         mStopBtn.setOnClickListener(this);
         mBgLayout.setOnTouchListener(this);
         mPushDrawerIb.setOnClickListener(this);
         mConfigBtn.setOnClickListener(this);
         mConfirmBtn.setOnClickListener(this);
         mRejectBtn.setOnClickListener(this);
+        mCircleTargetBtn.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                if (b) {
+                    //slowly increase carHeading after pressing button
+                    carHeading = getDroneHeading();
+                    carHeadingSubscription = timer.subscribe(new Action1<Long>() {
+                        int i = 0;
+                        @Override
+                        public void call(Long aLong) {
+                            if (i >= 90) cancelSubscription(carHeadingSubscription);
+                            if (carHeading >= 359)  carHeading = 0;
+                            else carHeading += 1;
+                            i++;
+                        }
+                    });
+                } else {
+                    if (carHeadingSubscription != null && !carHeadingSubscription.isUnsubscribed()) {
+                        carHeadingSubscription.unsubscribe();
+                    }
+                }
+            }
+        });
 
         mGestureModeSw.setChecked(getActiveTrackOperator().isGestureModeEnabled());
 
@@ -160,6 +230,11 @@ public class TrackingTestActivity extends DemoBaseActivity implements SurfaceTex
             }
         });
 
+    }
+
+    private float getDroneHeading() {
+        if (mFlightController.getCompass().getHeading() < 0) return mFlightController.getCompass().getHeading() + 360;
+        else return mFlightController.getCompass().getHeading();
     }
 
     @Override
@@ -350,6 +425,7 @@ public class TrackingTestActivity extends DemoBaseActivity implements SurfaceTex
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.tracking_stop_btn:
+                cancelSubscription(timerSubscription);
                 getActiveTrackOperator().stopTracking(new CommonCallbacks.CompletionCallback() {
                     @Override
                     public void onResult(DJIError error) {
@@ -374,15 +450,44 @@ public class TrackingTestActivity extends DemoBaseActivity implements SurfaceTex
                 });
                 break;
             case R.id.confirm_btn:
+                carHeading = getDroneHeading();
                 getActiveTrackOperator().acceptConfirmation(new CommonCallbacks.CompletionCallback() {
-
                     @Override
                     public void onResult(DJIError error) {
                         setResultToToast(error == null ? "Accept Confirm Success!" : error.getDescription());
+                        if (mFlightController != null) {
+                            timerSubscription = timer.subscribe(new Action1<Long>() {
+                                float speedFactor;
+                                @Override
+                                public void call(Long aLong) {
+                                    droneHeading = getDroneHeading();
+                                    //Log.i(TAG, "current compass heading: " + droneHeading);
+                                    float angleDiff = droneHeading - carHeading;
+                                    if (Math.abs(angleDiff) < 360 - Math.abs(angleDiff)) {
+                                        if (angleDiff >= 90) speedFactor = 1;
+                                        else if (angleDiff <= -90) speedFactor = -1;
+                                        else speedFactor = angleDiff/90;
+                                    } else {
+                                        angleDiff = (360 - Math.abs(angleDiff))*-(Math.signum(angleDiff));
+                                        if (angleDiff >= 90) speedFactor = 1;
+                                        else if (angleDiff <= -90) speedFactor = -1;
+                                        else speedFactor = angleDiff/90;
+                                    }
+                                    Log.i(TAG, "droneHeading = " + droneHeading + " carHeading = " + carHeading + " speedfactor = " + speedFactor);
+                                    getActiveTrackOperator().setCircularSpeed(speedFactor*MAX_SPEED, new CommonCallbacks.CompletionCallback() {
+                                        @Override
+                                        public void onResult(DJIError djiError) {
+                                            if (djiError != null) Log.e(TAG, "setCircularSpeed error: " + djiError.getDescription());
+                                        }
+                                    });
+                                }
+                            });
+                        }
                     }
                 });
                 break;
             case R.id.reject_btn:
+                cancelSubscription(timerSubscription);
                 getActiveTrackOperator().rejectConfirmation(new CommonCallbacks.CompletionCallback() {
 
                     @Override

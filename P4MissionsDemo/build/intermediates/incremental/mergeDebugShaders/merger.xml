@@ -1,2 +1,2 @@
 <?xml version="1.0" encoding="utf-8"?>
-<merger version="3"><dataSet config="main"><source path="C:\Users\andre\Google Drive\Uni\BA\Drohnensteuerung\DJI_SDK_Tutorials\ActiveTrack\P4MissionsDemo\src\main\shaders"/></dataSet><dataSet config="debug"><source path="C:\Users\andre\Google Drive\Uni\BA\Drohnensteuerung\DJI_SDK_Tutorials\ActiveTrack\P4MissionsDemo\src\debug\shaders"/></dataSet></merger>
+<merger version="3"><dataSet config="main"><source path="C:\Users\andre\Documents\Uni\BA-DJI-Projects\ActiveTrack\P4MissionsDemo\src\main\shaders"/></dataSet><dataSet config="debug"><source path="C:\Users\andre\Documents\Uni\BA-DJI-Projects\ActiveTrack\P4MissionsDemo\src\debug\shaders"/></dataSet></merger>
