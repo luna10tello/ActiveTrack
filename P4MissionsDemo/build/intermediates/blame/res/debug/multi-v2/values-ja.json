@@ -4,7 +4,7 @@
             "outputFile": "C:\\Users\\andre\\Documents\\Uni\\BA-DJI-Projects\\ActiveTrack\\P4MissionsDemo\\build\\intermediates\\incremental\\mergeDebugResources\\merged.dir\\values-ja\\values-ja.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\andre\\.gradle\\caches\\transforms-1\\files-1.1\\support-compat-27.1.0.aar\\3b13cfb262ed01dfe93a8d0408a60cdb\\res\\values-ja\\values-ja.xml",
+                    "source": "C:\\Users\\andre\\.gradle\\caches\\transforms-1\\files-1.1\\support-compat-27.1.0.aar\\a9f1f33cdf436de3269955358c7e5427\\res\\values-ja\\values-ja.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",
@@ -21,24 +21,7 @@
                     }
                 },
                 {
-                    "source": "C:\\Users\\andre\\.gradle\\caches\\transforms-1\\files-1.1\\dji-sdk-4.4.1.aar\\1a3347ee09a0934da620ab6242483b47\\res\\values-ja\\values-ja.xml",
-                    "from": {
-                        "startLines": "2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18",
-                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
-                        "startOffsets": "55,144,238,305,381,444,518,600,670,751,822,889,961,1026,1100,1205,1282",
-                        "endColumns": "88,93,66,75,62,73,81,69,80,70,66,71,64,73,104,76,75",
-                        "endOffsets": "139,233,300,376,439,513,595,665,746,817,884,956,1021,1095,1200,1277,1353"
-                    },
-                    "to": {
-                        "startLines": "19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35",
-                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
-                        "startOffsets": "1754,1843,1937,2004,2080,2143,2217,2299,2369,2450,2521,2588,2660,2725,2799,2904,2981",
-                        "endColumns": "88,93,66,75,62,73,81,69,80,70,66,71,64,73,104,76,75",
-                        "endOffsets": "1838,1932,1999,2075,2138,2212,2294,2364,2445,2516,2583,2655,2720,2794,2899,2976,3052"
-                    }
-                },
-                {
-                    "source": "C:\\Users\\andre\\.gradle\\caches\\transforms-1\\files-1.1\\appcompat-v7-27.1.0.aar\\52f42cbdcbe6d8149513180a5a546e41\\res\\values-ja\\values-ja.xml",
+                    "source": "C:\\Users\\andre\\.gradle\\caches\\transforms-1\\files-1.1\\appcompat-v7-27.1.0.aar\\c6fd78122f49feea658f64ae79755f4c\\res\\values-ja\\values-ja.xml",
                     "from": {
                         "startLines": "2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19",
                         "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
@@ -52,6 +35,23 @@
                         "startOffsets": "105,202,295,400,482,580,688,765,841,919,1021,1120,1215,1318,1413,1509,1657,3057",
                         "endColumns": "96,92,104,81,97,107,76,75,77,101,98,94,102,94,95,147,96,77",
                         "endOffsets": "197,290,395,477,575,683,760,836,914,1016,1115,1210,1313,1408,1504,1652,1749,3130"
+                    }
+                },
+                {
+                    "source": "C:\\Users\\andre\\.gradle\\caches\\transforms-1\\files-1.1\\dji-sdk-4.4.1.aar\\fc00eaced5fd3edc65dbce84dc151356\\res\\values-ja\\values-ja.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18",
+                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,144,238,305,381,444,518,600,670,751,822,889,961,1026,1100,1205,1282",
+                        "endColumns": "88,93,66,75,62,73,81,69,80,70,66,71,64,73,104,76,75",
+                        "endOffsets": "139,233,300,376,439,513,595,665,746,817,884,956,1021,1095,1200,1277,1353"
+                    },
+                    "to": {
+                        "startLines": "19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35",
+                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
+                        "startOffsets": "1754,1843,1937,2004,2080,2143,2217,2299,2369,2450,2521,2588,2660,2725,2799,2904,2981",
+                        "endColumns": "88,93,66,75,62,73,81,69,80,70,66,71,64,73,104,76,75",
+                        "endOffsets": "1838,1932,1999,2075,2138,2212,2294,2364,2445,2516,2583,2655,2720,2794,2899,2976,3052"
                     }
                 }
             ]

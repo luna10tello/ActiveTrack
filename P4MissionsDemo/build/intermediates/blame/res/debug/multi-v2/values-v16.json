@@ -4,7 +4,17 @@
             "outputFile": "C:\\Users\\andre\\Documents\\Uni\\BA-DJI-Projects\\ActiveTrack\\P4MissionsDemo\\build\\intermediates\\incremental\\mergeDebugResources\\merged.dir\\values-v16\\values-v16.xml",
             "map": [
                 {
-                    "source": "C:\\Users\\andre\\.gradle\\caches\\transforms-1\\files-1.1\\appcompat-v7-27.1.0.aar\\52f42cbdcbe6d8149513180a5a546e41\\res\\values-v16\\values-v16.xml",
+                    "source": "C:\\Users\\andre\\.gradle\\caches\\transforms-1\\files-1.1\\support-compat-27.1.0.aar\\a9f1f33cdf436de3269955358c7e5427\\res\\values-v16\\values-v16.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "65",
+                        "endOffsets": "116"
+                    }
+                },
+                {
+                    "source": "C:\\Users\\andre\\.gradle\\caches\\transforms-1\\files-1.1\\appcompat-v7-27.1.0.aar\\c6fd78122f49feea658f64ae79755f4c\\res\\values-v16\\values-v16.xml",
                     "from": {
                         "startLines": "2",
                         "startColumns": "4",
@@ -20,16 +30,6 @@
                         "endLines": "6",
                         "endColumns": "12",
                         "endOffsets": "289"
-                    }
-                },
-                {
-                    "source": "C:\\Users\\andre\\.gradle\\caches\\transforms-1\\files-1.1\\support-compat-27.1.0.aar\\3b13cfb262ed01dfe93a8d0408a60cdb\\res\\values-v16\\values-v16.xml",
-                    "from": {
-                        "startLines": "2",
-                        "startColumns": "4",
-                        "startOffsets": "55",
-                        "endColumns": "65",
-                        "endOffsets": "116"
                     }
                 }
             ]

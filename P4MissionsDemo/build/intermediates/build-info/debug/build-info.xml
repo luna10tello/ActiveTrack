@@ -6,22 +6,22 @@
     density="hdpi"
     format="10"
     plugin-version="3.0.1"
-    timestamp="1521552580282"
+    timestamp="1521632935308"
     token="5344182247633229530"
     verifier="FULL_BUILD_REQUESTED" >
 
     <task
         name="javac"
-        duration="600" />
+        duration="825" />
     <task
         name="instant-run-dex"
         duration="0" />
     <task
         name="instant-run-transform"
-        duration="97" />
+        duration="13" />
     <task
         name="verifier"
-        duration="50" />
+        duration="7" />
 
     <artifact
         location="C:\Users\andre\Documents\Uni\BA-DJI-Projects\ActiveTrack\P4MissionsDemo\build\intermediates\split-apk\debug\slices\slice_6.apk"
@@ -62,7 +62,7 @@
 
     <build
         build-mode="FULL"
-        timestamp="1521552580282"
+        timestamp="1521632935308"
         verifier="FULL_BUILD_REQUESTED" >
         <artifact
             location="C:\Users\andre\Documents\Uni\BA-DJI-Projects\ActiveTrack\P4MissionsDemo\build\intermediates\split-apk\debug\slices\slice_6.apk"

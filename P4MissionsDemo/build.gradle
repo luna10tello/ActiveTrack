@@ -35,10 +35,10 @@ android {
 }
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile 'com.android.support:appcompat-v7:27.1.0'
-    compile 'com.android.support:multidex:1.0.3'
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'com.android.support:appcompat-v7:27.1.1'
+    implementation 'com.android.support:multidex:1.0.3'
 
-    compile ('com.dji:dji-sdk:4.4.1')
-    provided ('com.dji:dji-sdk-provided:4.4.1')
+    implementation ('com.dji:dji-sdk:4.4.1')
+    compileOnly ('com.dji:dji-sdk-provided:4.4.1')
 }

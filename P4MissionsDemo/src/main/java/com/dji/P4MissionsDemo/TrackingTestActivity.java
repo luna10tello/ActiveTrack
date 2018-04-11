@@ -20,6 +20,8 @@ import dji.thirdparty.rx.Observable;
 import dji.thirdparty.rx.Subscription;
 import dji.thirdparty.rx.functions.Action1;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.graphics.PointF;
 import android.graphics.RectF;
 import android.os.Bundle;
@@ -33,6 +35,7 @@ import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.SlidingDrawer;
 import android.widget.Switch;
@@ -40,6 +43,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import org.w3c.dom.Text;
+
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.SocketException;
+import java.nio.BufferOverflowException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.concurrent.TimeUnit;
 
 public class TrackingTestActivity extends DemoBaseActivity implements SurfaceTextureListener, OnClickListener, OnTouchListener, ActiveTrackMissionOperatorListener {
@@ -55,7 +66,12 @@ public class TrackingTestActivity extends DemoBaseActivity implements SurfaceTex
     private Subscription carHeadingSubscription;
     private float droneHeading;
     private float carHeading;
-    private float MAX_SPEED = (float) 1.5;
+    private float carHeadingTime;
+    private float carHeadingDelta;
+    private float maxSpeed;
+    private float steeringAngle;
+    private DatagramSocket udpSocket;
+    private Thread t;
 
     private ImageButton mPushDrawerIb;
     private SlidingDrawer mPushInfoSd;
@@ -71,7 +87,7 @@ public class TrackingTestActivity extends DemoBaseActivity implements SurfaceTex
     private Button mConfigBtn;
     private Button mConfirmBtn;
     private Button mRejectBtn;
-    private ToggleButton mCircleTargetBtn;
+    private Button mConfigureCarHeadingBtn;
 
     private boolean isDrawingRect = false;
 
@@ -85,6 +101,42 @@ public class TrackingTestActivity extends DemoBaseActivity implements SurfaceTex
         super.onCreate(savedInstanceState);
         initUI();
         getActiveTrackOperator().addListener(this);
+        t = new Thread (new ReceiveUDP());
+        t.start();
+    }
+
+    private class ReceiveUDP implements Runnable {
+
+        byte[] receiveData = new byte[8];
+        ByteBuffer buffer = ByteBuffer.allocate(8);     //entspricht 2 float values (angleHeading, SteeringAngle)
+        @Override
+        public void run() {
+            try {
+                udpSocket = new DatagramSocket(4445);
+                buffer.order(ByteOrder.LITTLE_ENDIAN);
+            } catch (SocketException e) {
+                Log.e(TAG, "SocketException: " + e.getCause());
+            }
+            while (!t.isInterrupted()) {
+                try {
+                    DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                    udpSocket.receive(receivePacket);
+                    if (receiveData != null) {
+                        try {
+                            buffer.put(receiveData);
+                            buffer.flip();
+                            carHeading = buffer.getFloat();
+                            steeringAngle = buffer.getFloat();
+                        } catch (BufferOverflowException e) {
+                            Log.e(TAG, "BufferOverflowException: " + e.getCause());
+                        }
+                        Log.e(TAG, "lat = " + carHeading + " lon = " + steeringAngle);
+                    }
+                } catch (java.io.IOException e) {
+                    Log.e(TAG, "IOException: " + e.getCause());
+                }
+            }
+        }
     }
 
     @Override
@@ -117,6 +169,8 @@ public class TrackingTestActivity extends DemoBaseActivity implements SurfaceTex
         }
         cancelSubscription(timerSubscription);
         cancelSubscription(carHeadingSubscription);
+        t.interrupt();
+        udpSocket.close();
         super.onDestroy();
     }
 
@@ -167,36 +221,14 @@ public class TrackingTestActivity extends DemoBaseActivity implements SurfaceTex
         mConfigBtn = (Button)findViewById(R.id.recommended_configuration_btn);
         mConfirmBtn = (Button)findViewById(R.id.confirm_btn);
         mRejectBtn = (Button)findViewById(R.id.reject_btn);
-        mCircleTargetBtn = findViewById(R.id.circleTarget);
+        mConfigureCarHeadingBtn = findViewById(R.id.configurecarheading);
         mStopBtn.setOnClickListener(this);
         mBgLayout.setOnTouchListener(this);
         mPushDrawerIb.setOnClickListener(this);
         mConfigBtn.setOnClickListener(this);
         mConfirmBtn.setOnClickListener(this);
         mRejectBtn.setOnClickListener(this);
-        mCircleTargetBtn.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                if (b) {
-                    //slowly increase carHeading after pressing button
-                    carHeading = getDroneHeading();
-                    carHeadingSubscription = timer.subscribe(new Action1<Long>() {
-                        int i = 0;
-                        @Override
-                        public void call(Long aLong) {
-                            if (i >= 90) cancelSubscription(carHeadingSubscription);
-                            if (carHeading >= 359)  carHeading = 0;
-                            else carHeading += 1;
-                            i++;
-                        }
-                    });
-                } else {
-                    if (carHeadingSubscription != null && !carHeadingSubscription.isUnsubscribed()) {
-                        carHeadingSubscription.unsubscribe();
-                    }
-                }
-            }
-        });
+        mConfigureCarHeadingBtn.setOnClickListener(this);
 
         mGestureModeSw.setChecked(getActiveTrackOperator().isGestureModeEnabled());
 
@@ -455,6 +487,18 @@ public class TrackingTestActivity extends DemoBaseActivity implements SurfaceTex
                     @Override
                     public void onResult(DJIError error) {
                         setResultToToast(error == null ? "Accept Confirm Success!" : error.getDescription());
+                        carHeadingSubscription = timer.subscribe(new Action1<Long>() {
+                            int i = 0;
+                            @Override
+                            public void call(Long aLong) {
+                                if (i >= carHeadingTime*10) cancelSubscription(carHeadingSubscription);
+                                if (carHeading > 359)  carHeading = 0;
+                                else if (carHeading < 0) carHeading = 359;
+                                else carHeading = carHeading - carHeadingDelta * 0.1f / carHeadingTime;
+                                i++;
+                                //Log.i(TAG, "current carHeading: " + carHeading);
+                            }
+                        });
                         if (mFlightController != null) {
                             timerSubscription = timer.subscribe(new Action1<Long>() {
                                 float speedFactor;
@@ -474,7 +518,7 @@ public class TrackingTestActivity extends DemoBaseActivity implements SurfaceTex
                                         else speedFactor = angleDiff/90;
                                     }
                                     Log.i(TAG, "droneHeading = " + droneHeading + " carHeading = " + carHeading + " speedfactor = " + speedFactor);
-                                    getActiveTrackOperator().setCircularSpeed(speedFactor*MAX_SPEED, new CommonCallbacks.CompletionCallback() {
+                                    getActiveTrackOperator().setCircularSpeed(speedFactor*maxSpeed, new CommonCallbacks.CompletionCallback() {
                                         @Override
                                         public void onResult(DJIError djiError) {
                                             if (djiError != null) Log.e(TAG, "setCircularSpeed error: " + djiError.getDescription());
@@ -496,9 +540,56 @@ public class TrackingTestActivity extends DemoBaseActivity implements SurfaceTex
                     }
                 });
                 break;
+            case R.id.configurecarheading:
+                showSettingDialog();
+                break;
             default:
                 break;
         }
     }
 
+    private void showSettingDialog() {
+        LinearLayout activeTrackSettings = (LinearLayout) getLayoutInflater().inflate(R.layout.dialog_activetrack_setting, null);
+        final TextView maxSpeed_TV = activeTrackSettings.findViewById(R.id.maxspeed);
+        final TextView carHeadingTime_TV = activeTrackSettings.findViewById(R.id.carheadingtime);
+        final TextView carHeadingDelta_TV = activeTrackSettings.findViewById(R.id.carheadingdelta);
+
+        new AlertDialog.Builder(this)
+                .setTitle("")
+                .setView(activeTrackSettings)
+                .setPositiveButton("Finish",new DialogInterface.OnClickListener(){
+                    public void onClick(DialogInterface dialog, int id) {
+
+                        maxSpeed = Float.parseFloat(nullToFloat(maxSpeed_TV.getText().toString()));
+                        carHeadingTime = Float.parseFloat(nullToFloat(carHeadingTime_TV.getText().toString()));
+                        carHeadingDelta = Float.parseFloat(nullToFloat(carHeadingDelta_TV.getText().toString()));
+                        Log.e(TAG,"maxSpeed: " + maxSpeed);
+                        Log.e(TAG, "carHeadingTime: " + carHeadingTime);
+                        Log.e(TAG, "carHeadingDelta: " + carHeadingDelta);
+                        carHeading = getDroneHeading();
+                    }
+
+                })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        dialog.cancel();
+                    }
+
+                })
+                .create()
+                .show();
+    }
+
+    String nullToFloat (String value) {
+        if (!isFloatValue(value)) value = "0";
+        return value;
+    }
+
+    boolean isFloatValue(String val) {
+        try {
+            val = val.replace(" ", "");
+            Float.parseFloat(val);
+        } catch (Exception e) {return false;}
+        return true;
+    }
 }
